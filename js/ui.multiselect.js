@@ -29,6 +29,7 @@
 
 $.widget("ui.multiselect", {
   options: {
+		maxcount: false,
 		sortable: true,
 		searchable: true,
 		animated: 'fast',
@@ -46,6 +47,7 @@ $.widget("ui.multiselect", {
 		this.id = this.element.attr("id");
 		this.container = $('<div class="ui-multiselect ui-helper-clearfix ui-widget"></div>').insertAfter(this.element);
 		this.count = 0; // number of currently selected options
+		this.maxcount = this.options.maxcount;
 		this.selectedContainer = $('<div class="selected"></div>').appendTo(this.container);
 		this.availableContainer = $('<div class="available"></div>').appendTo(this.container);
 		this.selectedActions = $('<div class="actions ui-widget-header ui-helper-clearfix"><span class="count">0 '+$.ui.multiselect.locale.itemsCount+'</span><a href="#" class="remove-all">'+$.ui.multiselect.locale.removeAll+'</a></div>').appendTo(this.selectedContainer);
@@ -135,19 +137,52 @@ $.widget("ui.multiselect", {
 
 		var that = this;
 		var items = $(options.map(function(i) {
-	      var item = that._getOptionNode(this).appendTo(this.selected ? that.selectedList : that.availableList).show();
 
-			if (this.selected) that.count += 1;
-			that._applyItemState(item, this.selected);
-			item.data('idx', i);
-			return item[0];
+		if(that.maxcount>that.count || that.maxcount==false) {
+		  var item = that._getOptionNode(this).appendTo(this.selected ? that.selectedList : that.availableList).show();
+		  that._applyItemState(item, this.selected);
+		  item.data('idx', i);
+		  if (this.selected) that.count += 1;
+		
+		return item[0]; 
+		}
+		else
+		{
+		  var item = that._getOptionNode(this).appendTo(that.availableList).show();
+		  this.selected = false;
+		  that._applyItemState(item, this.selected);
+		  item.data('idx', i);
+		  return item[0]; 
+		}
+		
+		
     }));
 		
 		// update count
 		this._updateCount();
   },
+	_checkMaxcount: function()
+	{
+	  var maxcountlabel = '';
+		if (this.maxcount!=false) { maxcountlabel = '/' + this.maxcount; 
+		if(this.maxcount<=this.count) 
+		{
+		  this.availableList.children('.ui-draggable').draggable('disable');
+		  this.availableList.find('a.action').hide();
+		  this.container.find('.add-all').hide();
+		  
+		}
+		else
+		{
+		  this.availableList.children('.ui-draggable').draggable('enable');
+		  this.availableList.find('a.action').show();
+		  this.container.find('.add-all').show();
+		}
+		}
+	 return maxcountlabel;
+	},
 	_updateCount: function() {
-		this.selectedContainer.find('span.count').text(this.count+" "+$.ui.multiselect.locale.itemsCount);
+		this.selectedContainer.find('span.count').text(this.count+this._checkMaxcount()+" "+$.ui.multiselect.locale.itemsCount);
 	},
 	_getOptionNode: function(option) {
 		option = $(option);
@@ -166,7 +201,7 @@ $.widget("ui.multiselect", {
 	_setSelected: function(item, selected) {
 		item.data('optionLink').attr('selected', selected);
 
-		if (selected) {
+		if (selected && this.maxcount!=false && this.count<this.maxcount) {
 			var selectedItem = this._cloneWithData(item);
 			item[this.options.hide](this.options.animated, function() { $(this).remove(); });
 			selectedItem.appendTo(this.selectedList).hide()[this.options.show](this.options.animated);
@@ -212,9 +247,13 @@ $.widget("ui.multiselect", {
 			this._registerRemoveEvents(item.find('a.action'));
 			
 		} else {
-			item.children('span').removeClass('ui-icon-arrowthick-2-n-s').addClass('ui-helper-hidden').removeClass('ui-icon');
-			item.find('a.action span').addClass('ui-icon-plus').removeClass('ui-icon-minus');
-			this._registerAddEvents(item.find('a.action'));
+			
+			  item.children('span').removeClass('ui-icon-arrowthick-2-n-s').addClass('ui-helper-hidden').removeClass('ui-icon');
+			  item.find('a.action span').addClass('ui-icon-plus').removeClass('ui-icon-minus');
+			  this._registerAddEvents(item.find('a.action'));
+
+			  
+			  
 		}
 		
 		this._registerHoverEvents(item);
