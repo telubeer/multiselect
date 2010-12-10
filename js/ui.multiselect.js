@@ -131,6 +131,7 @@ $.widget("ui.multiselect", {
 		$.Widget.prototype.destroy.apply(this, arguments);
 	},
 	_populateLists: function(options) {
+		this.maxcount = this.options.maxcount;
 		this.selectedList.children('.ui-element').remove();
 		this.availableList.children('.ui-element').remove();
 		this.count = 0;
@@ -138,7 +139,7 @@ $.widget("ui.multiselect", {
 		var that = this;
 		var items = $(options.map(function(i) {
 
-		if(that.maxcount>that.count || that.maxcount==false) {
+		if((that.maxcount>that.count && that.maxcount!=false) || that.maxcount==false) {
 		  var item = that._getOptionNode(this).appendTo(this.selected ? that.selectedList : that.availableList).show();
 		  that._applyItemState(item, this.selected);
 		  item.data('idx', i);
@@ -161,6 +162,14 @@ $.widget("ui.multiselect", {
 		// update count
 		this._updateCount();
   },
+  _updateorder:function()
+  {
+	  var that = this;
+	  this.selectedList.find('li').each(function() {
+			if ($(this).data('optionLink'))
+				$(this).data('optionLink').remove().appendTo(that.element);
+		});
+  },
   onMaxcount: function(event)
   {
 	  var self = this;
@@ -174,6 +183,8 @@ $.widget("ui.multiselect", {
 
 	_checkMaxcount: function()
 	{
+	  var options = this.options;
+	  this.maxcount = this.options.maxcount;
 	  var maxcountlabel = '';
 		if (this.maxcount!=false) { maxcountlabel = '/' + this.maxcount; 
 		if(this.maxcount<=this.count) 
@@ -196,6 +207,7 @@ $.widget("ui.multiselect", {
 	},
 	_updateCount: function() {
 		this.selectedContainer.find('span.count').text(this.count+this._checkMaxcount()+" "+$.ui.multiselect.locale.itemsCount);
+		this._updateorder();
 	},
 	_getOptionNode: function(option) {
 		option = $(option);
@@ -213,8 +225,9 @@ $.widget("ui.multiselect", {
 	},
 	_setSelected: function(item, selected) {
 		item.data('optionLink').attr('selected', selected);
-
-		if (selected && this.maxcount!=false && this.count<this.maxcount) {
+		  var options = this.options;
+		  this.maxcount = this.options.maxcount;
+		if (selected && (this.maxcount!=false && this.count<this.maxcount)||(this.maxcount==false)) {
 			var selectedItem = this._cloneWithData(item);
 			item[this.options.hide](this.options.animated, function() { $(this).remove(); });
 			selectedItem.appendTo(this.selectedList).hide()[this.options.show](this.options.animated);
