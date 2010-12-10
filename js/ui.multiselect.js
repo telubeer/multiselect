@@ -81,10 +81,7 @@ $.widget("ui.multiselect", {
 				axis: 'y',
 				update: function(event, ui) {
 					// apply the new sort order to the original selectbox
-					that.selectedList.find('li').each(function() {
-						if ($(this).data('optionLink'))
-							$(this).data('optionLink').remove().appendTo(that.element);
-					});
+					that._updateorder();
 				},
 				receive: function(event, ui) {
 					ui.item.data('optionLink').attr('selected', true);
