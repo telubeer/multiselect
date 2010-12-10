@@ -161,12 +161,24 @@ $.widget("ui.multiselect", {
 		// update count
 		this._updateCount();
   },
+  onMaxcount: function(event)
+  {
+	  var self = this;
+	  return self;
+  },
+  onMaxcountNot: function(event)
+  {
+	  var self = this;
+	  return self;
+  },
+
 	_checkMaxcount: function()
 	{
 	  var maxcountlabel = '';
 		if (this.maxcount!=false) { maxcountlabel = '/' + this.maxcount; 
 		if(this.maxcount<=this.count) 
 		{
+		  this._trigger('onMaxcount', event);
 		  this.availableList.children('.ui-draggable').draggable('disable');
 		  this.availableList.find('a.action').hide();
 		  this.container.find('.add-all').hide();
@@ -174,6 +186,7 @@ $.widget("ui.multiselect", {
 		}
 		else
 		{
+		  this._trigger('onMaxcountNot', event);
 		  this.availableList.children('.ui-draggable').draggable('enable');
 		  this.availableList.find('a.action').show();
 		  this.container.find('.add-all').show();
